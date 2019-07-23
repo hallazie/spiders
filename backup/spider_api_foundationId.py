@@ -11,6 +11,8 @@ import random
 class Spider():
 	def __init__(self):
 		self.basic_format = 'https://icd.who.int/browse11/l-m/en/JsonGetChildrenConcepts?ConceptId=http://id.who.int/icd/entity/%s&useHtml=false'
+		self.basic_head = 'https://icd.who.int/browse11/l-m/en/JsonGetChildrenConcepts?ConceptId=http://id.who.int/icd/entity/'
+		self.basic_tail = '&useHtml=false'
 		self.idx_set = set()
 		self.url_queue = queue.Queue(maxsize=0)
 		self.root_id_list = [
@@ -43,7 +45,6 @@ class Spider():
 			'231358748',
 			'979408586'
 		]
-		# self.url_queue.put('https://icd.who.int/browse11/l-m/en/JsonGetRootConcepts?useHtml=false')
 		for e in self.root_id_list:
 			self.url_queue.put(self.basic_format % e)
 		self.sleep_count = 0
@@ -76,7 +77,7 @@ class Spider():
 	def save_idx(self, content):
 		with open('idx_total.json', 'a') as f:
 			json.dump(content, f)
-			f.write(',')
+			f.write(',\n')
 
 	def crawl(self):
 		while(self.url_queue.qsize() != 0):
@@ -95,19 +96,20 @@ class Spider():
 					self.url_queue.put(url_curr)
 				else:
 					print('[ERROR] %s with url: %s' % (str(err_to), url_curr))
+					self.url_queue.put(url_curr)
 					continue
 			except Exception as err_dft:
-				print('[ERROR] unknown type error occurs...')
+				print('[ERROR] unknown type error occurs: %s' % err_dft)
 				continue
 			finally:
 				pass
 			try:
 				content_list = json.loads(url_page.read())
 			except Exception as e:
-				print('[ERROR] json convert error, invalid page')
+				print('[ERROR] json convert error, invalid page: %s' % e)
 				continue
 			if len(content_list) == 0:
-				print('[INFO] reach to leaf nodes')
+				print('[INFO] reach to leaf node %s, queue size remains %s' % (url_curr.replace(self.basic_head, '').replace(self.basic_tail, ''), self.url_queue.qsize()))
 				self.leaf_dict[url_curr] = True
 				leaf_flag = True
 				continue
@@ -131,7 +133,7 @@ class Spider():
 				except KeyError as err_key:
 					print('[ERROR] key ID not exist, jump over')
 				except Exception as err:
-					print('[ERROR] unknown type error occurs...')
+					print('[ERROR] inner unknown type error occurs... %s' % err)
 
 if __name__ == '__main__':
 	s = Spider()
