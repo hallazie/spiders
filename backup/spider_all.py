@@ -197,13 +197,14 @@ class Spider():
 		pass
 
 	def init_html_url_queue(self):
-		with open('idx_total_0714.json', 'r') as f:
+		with open('idx_total_0723.json', 'r') as f:
 			for line in f.readlines():
 				try:
 					line_j = json.loads(line.strip()[:-1])
 					self.url_queue.put({
 						'idx' : line_j['ID'].replace('http://id.who.int/icd/entity/', ''),
-						'breath' : line_j['breadthValue'],
+						# 'breath' : line_j['breadthValue'],
+						'breath' : 0.0,
 						'leaf' : line_j['isLeaf']
 						})
 				except Exception as e:
